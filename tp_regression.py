@@ -1,55 +1,118 @@
 import pandas as pd
 from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, accuracy_score
+
+# =========================
+# PARTIE 1 : REGRESSION LINEAIRE (Auto MPG depuis UCI)
+# =========================
+
+from ucimlrepo import fetch_ucirepo
+
+auto_mpg = fetch_ucirepo(id=9)
+
+X_auto = auto_mpg.data.features.copy()
+y_auto = auto_mpg.data.targets.copy()
+
+data_auto = pd.concat([y_auto, X_auto], axis=1)
+
+# Remove non-numeric column if exists
+if "car_name" in data_auto.columns:
+    data_auto = data_auto.drop(columns=["car_name"])
+
+print("===== PARTIE 1 : REGRESSION LINEAIRE =====")
+print(data_auto.head())
+print("\nShape:", data_auto.shape)
+
+# Remove missing values
+data_auto = data_auto.dropna()
+
+X = data_auto.drop(columns=["mpg"])
+y = data_auto["mpg"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=20
+)
+
+lin_model = LinearRegression()
+lin_model.fit(X_train, y_train)
+
+import pandas as pd
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, accuracy_score
 
 print("===== PARTIE 1 : REGRESSION LINEAIRE =====")
 
-# =========================
-# 1) REGRESSION LINEAIRE
-# =========================
-df = pd.read_csv("datasets/auto-mpg.csv")
+# Chargement du dataset auto-mpg
+data_auto = pd.read_csv("datasets/auto-mpg.csv")
 
 print("\nAperçu du dataset auto-mpg :")
-print(df.head())
+print(data_auto.head())
 
-# X = variable explicative
-X = df[["weight"]]
+print("\nShape:", data_auto.shape)
 
-# y = variable cible
-y = df["mpg"]
+# Variables explicatives
+X = data_auto[[
+    "cylinders",
+    "displacement",
+    "horsepower",
+    "weight",
+    "acceleration",
+    "model_year",
+    "origin"
+]]
 
-# modèle linéaire
-model_lin = LinearRegression()
-model_lin.fit(X, y)
+# Variable cible
+y = data_auto["mpg"]
 
-# prédiction
-prediction_lin = model_lin.predict(pd.DataFrame([[3000]], columns=["weight"]))
+# Séparation train / test
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=20
+)
 
-print("\nPrediction pour weight = 3000 :")
-print(prediction_lin)
+# Création et entraînement du modèle
+lin_model = LinearRegression()
+lin_model.fit(X_train, y_train)
 
-print("\n========================================")
-print("===== PARTIE 2 : REGRESSION LOGISTIQUE =====")
+# Prédiction sur le test set
+pred_lin = lin_model.predict(X_test)
 
-# =========================
-# 2) REGRESSION LOGISTIQUE
-# =========================
-df2 = pd.read_csv("datasets/binary.csv")
+print("\nR2 score:", round(r2_score(y_test, pred_lin), 2))
+
+# Exemple de prédiction
+sample = [[8, 307, 130, 3000, 12.0, 70, 1]]
+print("Prediction example MPG:", lin_model.predict(sample))
+
+print("\n===== PARTIE 2 : REGRESSION LOGISTIQUE =====")
+
+# Chargement du dataset binary
+data_bin = pd.read_csv("datasets/binary.csv")
 
 print("\nAperçu du dataset binary :")
-print(df2.head())
+print(data_bin.head())
 
-# X = variables explicatives
-X2 = df2[["feature1", "feature2"]]
+print("\nShape:", data_bin.shape)
 
-# y = variable cible
-y2 = df2["target"]
+# Variables explicatives
+X2 = data_bin[["feature1", "feature2"]]
 
-# modèle logistique
-model_log = LogisticRegression()
-model_log.fit(X2, y2)
+# Variable cible
+y2 = data_bin["target"]
 
-# prédiction
-prediction_log = model_log.predict(pd.DataFrame([[3, 3]], columns=["feature1", "feature2"]))
+# Séparation train / test
+x_train, x_test, y_train, y_test = train_test_split(
+    X2, y2, test_size=0.3, random_state=1
+)
 
-print("\nPrediction pour [3,3] :")
-print(prediction_log)
+# Création et entraînement du modèle logistique
+log_model = LogisticRegression()
+log_model.fit(x_train, y_train)
+
+# Prédiction sur le test set
+pred_log = log_model.predict(x_test)
+
+print("\nAccuracy:", round(accuracy_score(y_test, pred_log), 2))
+
+# Exemple de prédiction
+print("Prediction pour [3,3] :", log_model.predict([[3, 3]]))
